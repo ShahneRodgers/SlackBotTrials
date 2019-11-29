@@ -25,12 +25,12 @@ class CakeTuesdayBot(slack.WebClient):
             if len(suspects) <= NUM_MEMBERS_PER_WEEK:
                 return suspects
             previous = self._get_tagged_in_message(message)
+            last_removed = previous & suspects
             suspects -= set(previous)
-            import pdb; pdb.set_trace()
             while len(suspects) < NUM_MEMBERS_PER_WEEK:
-                # FIXME: should be based on what was removed from suspects earlier only
-                # and probably randomised
-                suspects.add(previous.pop())
+                # If we don't have enough suspects left, just choose one of the
+                # people who was last removed.
+                suspects.add(last_removed.pop())
 
         if len(suspects) > NUM_MEMBERS_PER_WEEK:
             return list(suspects)[:NUM_MEMBERS_PER_WEEK]
@@ -56,19 +56,6 @@ class CakeTuesdayBot(slack.WebClient):
         if channel:
             return channel[0]
         return None
-
-    
-
-def post_message(client):
-    response = client.chat_postMessage(
-        channel=f'#random',
-        text="Hello world!")
-    print(str(response))
-
-def get_members(client):
-    channels = client.conversations_list().data["channels"]
-    channel_id = [c for c in channels if c["name"] == CHANNEL_NAME][0]['id']
-    return client.conversations_members(channel=channel_id).data['members']
 
 
 # Program starts here
